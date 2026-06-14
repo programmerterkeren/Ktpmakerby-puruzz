@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake E-KTP Generator • Modern</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    /* ===== RESET & GLOBAL ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      background: #0b0f1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ===== VIDEO BACKGROUND ===== */
+    #video-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    /* ===== PARTICLE CANVAS ===== */
+    #particles-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ===== LOADING STATUS BAR ===== */
+    #loading-bar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      z-index: 9999;
+      display: none;
+      overflow: hidden;
+    }
+    #loading-bar.show { display: block; }
+    #loading-bar::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #818cf8, #38bdf8);
+      background-size: 200% 100%;
+      animation: loadingSlide 1s ease-in-out infinite, loadingProgress 0.8s ease-out forwards;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+    }
+    @keyframes loadingSlide {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    @keyframes loadingProgress {
+      0% { width: 0%; }
+      30% { width: 45%; }
+      70% { width: 85%; }
+      100% { width: 100%; }
+    }
+
+    #loading-text {
+      position: fixed;
+      top: 8px;
+      right: 16px;
+      background: rgba(11, 17, 32, 0.9);
+      color: #bae6fd;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    #loading-text.show { display: flex; animation: fadeIn 0.2s ease; }
+    #loading-text i {
+      animation: spin 0.8s linear infinite;
+      color: #38bdf8;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== MAIN WRAPPER ===== */
+    .app-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 1300px;
+      backdrop-filter: blur(3px);
+      background: rgba(10,14,28,0);
+      border-radius: 42px;
+      padding: 28px 30px 30px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      transition: all 0.3s;
+    }
+
+    /* ===== HEADER + SOSMED ===== */
+    .header-flex {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .title-group h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #bae6fd, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 18px rgba(56, 189, 248, 0.3);
+    }
+    .title-group i {
+      font-size: 2.2rem;
+      color: #38bdf8;
+      filter: drop-shadow(0 0 8px #38bdf8);
+    }
+    .title-group .badge-gen {
+      color:#64748b; font-size:0.8rem; background: #0f172a; padding:4px 12px; border-radius:30px;
+    }
+
+    .social-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .social-buttons a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 40px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #e5e7eb;
+      font-size: 1.5rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      text-decoration: none;
+    }
+    .social-buttons a:hover {
+      transform: scale(1.12) translateY(-4px);
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.3);
+      color: white;
+    }
+    .social-buttons .music-btn {
+      background: rgba(248, 113, 113, 0.2);
+      border-color: #f87171;
+      color: #fecaca;
+    }
+    .social-buttons .music-btn:hover {
+      background: rgba(248, 113, 113, 0.4);
+      border-color: #f87171;
+      box-shadow: 0 8px 24px rgba(248, 113, 113, 0.4);
+    }
+    .social-buttons .music-btn.playing {
+      background: #f87171;
+      color: #fff;
+    }
+
+    /* ===== GRID LAYOUT ===== */
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 24px;
+      margin-top: 6px;
+    }
+    @media (max-width: 920px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: rgba(8,20,48,0.427);
+      backdrop-filter: blur(14px);
+      border-radius: 28px;
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      padding: 22px 20px 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      transition: 0.3s;
+    }
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.8);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      padding-bottom: 10px;
+    }
+    .card-header .card-title {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    .badge-soft {
+      background: rgba(56, 189, 248, 0.1);
+      padding: 4px 14px;
+      border-radius: 40px;
+      border: 1px solid #38bdf8;
+      color: #bae6fd;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    /* ===== FORM ===== */
+    #ktp-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px 16px;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      letter-spacing: 0.03em;
+    }
+    input[type="text"] {
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #f1f5f9;
+      font-size: 0.85rem;
+      transition: 0.2s;
+      outline: none;
+    }
+    input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+      background: #020617;
+    }
+    .full-width { grid-column: 1 / -1; }
+    .form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    /* ===== UPLOAD BOX MODERN ===== */
+    .upload-box {
+      grid-column: 1 / -1;
+      border: 2px dashed rgba(56, 189, 248, 0.5);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      background: rgba(2, 6, 23, 0.5);
+      transition: all 0.25s ease;
+      position: relative;
+      min-height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .upload-box:hover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.06);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
+    }
+    .upload-box.has-file {
+      border-style: solid;
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.06);
+      min-height: auto;
+      padding: 16px;
+      cursor: default;
+    }
+    .upload-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    .upload-icon {
+      font-size: 2rem;
+      color: #38bdf8;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
+      transition: transform 0.2s;
+    }
+    .upload-box:hover .upload-icon {
+      transform: translateY(-3px);
+    }
+    .upload-trigger {
+      color: #bae6fd;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 6px 16px;
+      border-radius: 8px;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .upload-trigger:hover {
+      color: #fff;
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.3);
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+    .upload-trigger:active { transform: scale(0.98); }
+    .upload-hint {
+      color: #64748b;
+      font-size: 0.7rem;
+      margin-top: 2px;
+    }
+    .upload-selected {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      position: relative;
+    }
+    .upload-selected img {
+      max-width: 180px;
+      max-height: 200px;
+      border-radius: 12px;
+      border: 2px solid #22c55e;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      object-fit: cover;
+    }
+    .upload-clear {
+      position: absolute;
+      top: -8px;
+      right: calc(50% - 95px);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #ef4444;
+      border: 2px solid #0b1120;
+      color: white;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 2;
+    }
+    .upload-clear:hover {
+      background: #dc2626;
+      transform: scale(1.1);
+    }
+    .upload-filename {
+      color: #94a3b8;
+      font-size: 0.8rem;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .upload-selected.show { animation: fadeSlide 0.25s ease; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      border: none;
+      border-radius: 40px;
+      padding: 10px 24px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+    .btn-primary {
+      background: linear-gradient(145deg, #2563eb, #38bdf8);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: scale(1.02) translateY(-2px);
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.6);
+    }
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.9);
+      color: #cbd5e1;
+      border: 1px solid #475569;
+    }
+    .btn-secondary:hover {
+      background: #1e293b;
+      color: white;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px dashed #38bdf8;
+      color: #bae6fd;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .btn-ghost.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .btn-ghost:hover {
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    /* ===== PREVIEW ===== */
+    #preview-container {
+      background: rgba(2, 6, 23, 0.6);
+      border-radius: 20px;
+      padding: 12px;
+      border: 1px dashed #334155;
+      display: flex;
+      justify-content: center;
+    }
+    #ktp-canvas {
+      max-width: 100%;
+      border-radius: 14px;
+      display: block;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+    }
+    .result-links { margin-top: 10px; }
+    .result-links a {
+      color: #bae6fd;
+      text-decoration: none;
+      border-bottom: 1px dotted #38bdf8;
+      font-size: 0.8rem;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #64748b;
+      border-top: 1px solid rgba(148,163,184,0.1);
+      padding-top: 18px;
+    }
+    .footer a {
+      color: #38bdf8;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* ===== POPUP PERINGATAN ===== */
+    #fun-warning-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.85);
+      backdrop-filter: blur(3px);
+      display: none;
+      z-index: 9998;
+    }
+    #fun-warning-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      background: #0b1120;
+      padding: 30px 30px 25px;
+      border-radius: 28px;
+      border: 1px solid #f87171;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      display: none;
+      z-index: 10000;
+      color: #f1f5f9;
+    }
+    #fun-warning-overlay.show { display: block; }
+    #fun-warning-popup.show { display: block; transform: translate(-50%, -50%) scale(1); }
+    #fun-warning-popup h2 { color: #fca5a5; margin-bottom: 8px; }
+    #fun-warning-popup button {
+      background: linear-gradient(145deg, #f97316, #fb7185);
+      border: none;
+      border-radius: 40px;
+      padding: 10px 32px;
+      font-weight: 700;
+      color: white;
+      margin-top: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- VIDEO BACKGROUND -->
+  <video id="video-bg" autoplay muted loop playsinline>
+    <source src="https://files.catbox.moe/s7gr0x.mp4" type="video/mp4" />
+  </video>
+
+  <!-- PARTICLE CANVAS -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- LOADING STATUS BAR -->
+  <div id="loading-bar"></div>
+  <div id="loading-text">
+    <i class="fas fa-circle-notch"></i>
+    <span>Generating...</span>
+  </div>
+
+  <!-- MAIN WRAPPER -->
+  <div class="app-wrapper">
+
+    <!-- HEADER + SOSMED -->
+    <div class="header-flex">
+      <div class="title-group">
+        <i class="fas fa-id-card"></i>
+        <h1>Fake <br>E-KTP</h1>
+        <span class="badge-gen">✨ Generator</span>
+      </div>
+      <div class="social-buttons">
+        <a href="#" id="musicToggle" class="music-btn" title="Putar Musik"><i class="fas fa-music"></i></a>
+        <a href="https://whatsapp.com/channel/0029Vb7sv8qFcovxf4EHMj2G" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://github.com/programmerterkeren" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+        <a href="https://saweria.co/mksihorangbaik00" target="_blank" title="Saweria"><i class="fas fa-mug-hot"></i></a>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+      <!-- FORM CARD -->
+      <section class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-edit" style="margin-right:6px;"></i> Data KTP</span>
+          <span class="badge-soft"><i class="fas fa-pen-fancy"></i> Input</span>
+        </div>
+        <form id="ktp-form">
+          <label>Provinsi <input type="text" id="provinsi" value="Jawa Timur" required /></label>
+          <label>Kota <input type="text" id="kota" value="Surabaya" required /></label>
+          <label>NIK <input type="text" id="nik" value="127xxxx" required /></label>
+          <label>Nama <input type="text" id="nama" value="Bima Vrozz Saputra" required /></label>
+          <label>Tempat/Tgl Lahir <input type="text" id="ttl" value="Surabaya, 01-09-2000" required /></label>
+          <label>Jenis Kelamin <input type="text" id="jenis_kelamin" value="laki-laki" required /></label>
+          <label>Gol. Darah <input type="text" id="golongan_darah" value="o" required /></label>
+          <label>Alamat <input type="text" id="alamat" value="jl xxx xxx xxx" required /></label>
+          <label>RT/RW <input type="text" id="rtRw" value="000/000" required /></label>
+          <label>Kel/Desa <input type="text" id="kel_desa" value="xxx" required /></label>
+          <label>Kecamatan <input type="text" id="kecamatan" value="xxx" required /></label>
+          <label>Agama <input type="text" id="agama" value="xxx" required /></label>
+          <label>Status <input type="text" id="status" value="Jomblo" required /></label>
+          <label>Pekerjaan <input type="text" id="pekerjaan" value="Nyari sensi" required /></label>
+          <label>Kewarganegaraan <input type="text" id="kewarganegaraan" value="wni" required /></label>
+          <label>Masa Berlaku <input type="text" id="masa_berlaku" value="seumur hidup" required /></label>
+          <label>Tanggal Terbuat <input type="text" id="terbuat" value="19-10-2023" required /></label>
+          
+          <!-- UPLOAD FOTO MODERN (OPSIONAL) -->
+          <div class="full-width">
+            <label style="margin-bottom: 8px;">Pas Foto <small style="color:#64748b; font-weight:400;">(opsional)</small></label>
+            <div class="upload-box" id="upload-box">
+              <!-- Hidden file input -->
+              <input type="file" id="pas_photo" accept="image/*" style="display: none;" />
+              
+              <!-- State: Belum ada foto -->
+              <div class="upload-placeholder" id="upload-placeholder">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <span class="upload-trigger" id="upload-trigger">Upload Foto</span>
+                <small class="upload-hint">PNG, JPG • Max 5MB • Kosongkan untuk pakai default</small>
+              </div>
+              
+              <!-- State: Sudah ada foto -->
+              <div class="upload-selected" id="upload-selected" style="display: none;">
+                <img id="preview-img" src="" alt="Preview" />
+                <button type="button" class="upload-clear" id="upload-clear" title="Hapus">
+                  <i class="fas fa-times"></i>
+                </button>
+                <span class="upload-filename" id="upload-filename"></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-cogs"></i> Generate</button>
+            <button type="button" id="clear-btn" class="btn btn-secondary"><i class="fas fa-eraser"></i> Bersihkan</button>
+            <a href="#" id="download-link" class="btn btn-ghost" download="fake-ektp.png"><i class="fas fa-download"></i> PNG</a>
+          </div>
+        </form>
+      </section>
+
+      <!-- PREVIEW CARD -->
+      <section class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-eye"></i> Preview</span>
+          <span class="badge-soft"><i class="fas fa-camera"></i> Canvas</span>
+        </div>
+        <div id="preview-container">
+          <canvas id="ktp-canvas" width="720" height="463"></canvas>
+        </div>
+        <div class="result-links">
+          <a id="result-link" href="#" target="_blank" style="display:none;"><i class="fas fa-link"></i> Result link (publik)</a>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      Made with <i class="fas fa-heart" style="color:#f87171;"></i> by <a href="https://saweria.co/mksihorangbaik00" target="_blank">Puruzz X Vrozz</a>
+    </footer>
+  </div>
+
+  <!-- PERINGATAN POPUP -->
+  <div id="fun-warning-overlay"></div>
+  <div id="fun-warning-popup">
+    <h2><i class="fas fa-exclamation-triangle"></i> PERINGATAN</h2>
+    <p>Web ini hanya untuk kesenangan semata. Gunakan dengan bijak.</p>
+    <small>Dengan menekan "Oke", kamu paham ini hiburan.</small>
+    <button id="fun-warning-ok"><i class="fas fa-check-circle"></i> Oke</button>
+  </div>
+
+  <!-- AUDIO -->
+  <audio id="bg-music" src="https://files.catbox.moe/0kd43s.m4a" preload="auto" loop></audio>
+
+  <!-- ========== SCRIPT UTAMA ========== -->
+  <script>
+    (function(){
+      // ===== PARTICLE BG (Bottom to Top) =====
+      const canvasP = document.getElementById('particles-canvas');
+      const ctxP = canvasP.getContext('2d');
+      let w, h;
+      
+      function resize() {
+        w = canvasP.width = window.innerWidth;
+        h = canvasP.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      const particles = Array.from({ length: 110 }, () => ({
+        x: Math.random() * w,
+        y: h + Math.random() * 100,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: -Math.random() * 0.8 - 0.3,
+        r: Math.random() * 1.8 + 1.2,
+        opacity: Math.random() * 0.5 + 0.2,
+      }));
+
+      function drawParticles() {
+        ctxP.clearRect(0, 0, w, h);
+        
+        for (let p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          
+          if (p.y < -20) {
+            p.y = h + Math.random() * 50;
+            p.x = Math.random() * w;
+            p.vy = -Math.random() * 0.8 - 0.3;
+          }
+          
+          p.vx += (Math.random() - 0.5) * 0.02;
+          p.vx = Math.max(-0.6, Math.min(0.6, p.vx));
+          
+          ctxP.beginPath();
+          ctxP.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctxP.fillStyle = `rgba(56, 189, 248, ${p.opacity})`;
+          ctxP.fill();
+        }
+        
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 100) {
+              ctxP.beginPath();
+              ctxP.moveTo(particles[i].x, particles[i].y);
+              ctxP.lineTo(particles[j].x, particles[j].y);
+              ctxP.strokeStyle = `rgba(56, 189, 248, ${0.04 * (1 - dist / 100)})`;
+              ctxP.lineWidth = 0.5;
+              ctxP.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(drawParticles);
+      }
+      drawParticles();
+
+      // ===== MUSIC TOGGLE =====
+      const audio = document.getElementById('bg-music');
+      const musicBtn = document.getElementById('musicToggle');
+      let isPlaying = false;
+
+      musicBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (isPlaying) {
+          audio.pause();
+          isPlaying = false;
+          musicBtn.classList.remove('playing');
+          musicBtn.innerHTML = '<i class="fas fa-music"></i>';
+        } else {
+          audio.play().catch(() => {});
+          isPlaying = true;
+          musicBtn.classList.add('playing');
+          musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        }
+      });
+
+      // ===== WARNING POPUP =====
+      const overlayW = document.getElementById('fun-warning-overlay');
+      const popupW = document.getElementById('fun-warning-popup');
+      const okBtn = document.getElementById('fun-warning-ok');
+      setTimeout(() => {
+        overlayW.classList.add('show');
+        popupW.classList.add('show');
+      }, 400);
+      okBtn.addEventListener('click', function() {
+        overlayW.classList.remove('show');
+        popupW.classList.remove('show');
+        audio.play().catch(() => {});
+        isPlaying = true;
+        musicBtn.classList.add('playing');
+        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+      });
+    })();
+  </script>
+
+  <!-- ========== SCRIPT E-KTP ========== -->
+  <script>
+    (function(){
+      const canvas = document.getElementById('ktp-canvas');
+      const ctx = canvas.getContext('2d');
+      const form = document.getElementById('ktp-form');
+      const pasPhotoInput = document.getElementById('pas_photo');
+      const downloadLink = document.getElementById('download-link');
+      const loadingBar = document.getElementById('loading-bar');
+      const loadingText = document.getElementById('loading-text');
+      const resultLink = document.getElementById('result-link');
+      const clearBtn = document.getElementById('clear-btn');
+
+      // Upload elements
+      const uploadBox = document.getElementById('upload-box');
+      const uploadPlaceholder = document.getElementById('upload-placeholder');
+      const uploadSelected = document.getElementById('upload-selected');
+      const uploadTrigger = document.getElementById('upload-trigger');
+      const uploadClear = document.getElementById('upload-clear');
+      const previewImg = document.getElementById('preview-img');
+      const uploadFilename = document.getElementById('upload-filename');
+
+      const templateSrc = './src/Template.png';
+      const DEFAULT_PHOTO_URL = './src/default.png'; // ⭐ Ganti dengan path gambar default kamu
+
+      let selectedFile = null;
+
+      // ===== UPLOAD LOGIC =====
+      uploadBox.addEventListener('click', (e) => {
+        if (!selectedFile && !e.target.closest('.upload-clear')) {
+          pasPhotoInput.click();
+        }
+      });
+      uploadTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pasPhotoInput.click();
+      });
+
+      pasPhotoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleFileSelect(file);
+      });
+
+      function handleFileSelect(file) {
+        if (!file.type.startsWith('image/')) {
+          alert('⚠️ Harap pilih file gambar!');
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          alert('⚠️ Ukuran file maksimal 5MB!');
+          return;
+        }
+        
+        selectedFile = file;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          uploadFilename.textContent = file.name.length > 25 
+            ? file.name.substring(0, 22) + '...' 
+            : file.name;
+          
+          uploadPlaceholder.style.display = 'none';
+          uploadSelected.style.display = 'flex';
+          uploadSelected.classList.add('show');
+          uploadBox.classList.add('has-file');
+        };
+        reader.readAsDataURL(file);
+      }
+
+      uploadClear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectedFile = null;
+        pasPhotoInput.value = '';
+        previewImg.src = '';
+        uploadFilename.textContent = '';
+        
+        uploadSelected.style.display = 'none';
+        uploadSelected.classList.remove('show');
+        uploadPlaceholder.style.display = 'flex';
+        uploadBox.classList.remove('has-file');
+      });
+
+      // Drag & drop visual feedback
+      ['dragenter', 'dragover'].forEach(evt => {
+        uploadBox.addEventListener(evt, (e) => {
+          e.preventDefault();
+          if (!selectedFile) {
+            uploadBox.style.borderColor = '#38bdf8';
+            uploadBox.style.background = 'rgba(56, 189, 248, 0.1)';
+          }
+        });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        uploadBox.addEventListener(evt, (e) => {
+          e.preventDefault();
+          if (!selectedFile) {
+            uploadBox.style.borderColor = '';
+            uploadBox.style.background = '';
+          }
+        });
+      });
+      uploadBox.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length && !selectedFile) {
+          handleFileSelect(files[0]);
+        }
+      });
+
+      // ===== CORE FUNCTIONS =====
+      function loadImageFromURL(url) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = url;
+        });
+      }
+      
+      function loadImageFromFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              const img = new Image();
+              img.onload = () => resolve(img);
+              img.onerror = reject;
+              img.src = reader.result;
+            } catch (err) { reject(err); }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function loadFonts() {
+        try {
+          const arrial = new FontFace('ArrialKTP', 'url(./font/Arrial.ttf)');
+          const ocr = new FontFace('OcrKTP', 'url(./font/Ocr.ttf)');
+          const sign = new FontFace('SignKTP', 'url(./font/Sign.ttf)');
+          await Promise.all([
+            arrial.load().then(f => document.fonts.add(f)),
+            ocr.load().then(f => document.fonts.add(f)),
+            sign.load().then(f => document.fonts.add(f)),
+          ]);
+        } catch (e) { console.warn('Font fallback', e); }
+      }
+
+      function getFormData() {
+        const get = id => document.getElementById(id).value;
+        return {
+          provinsi: get('provinsi'), kota: get('kota'), nik: get('nik'), nama: get('nama'),
+          ttl: get('ttl'), jenis_kelamin: get('jenis_kelamin'), golongan_darah: get('golongan_darah'),
+          alamat: get('alamat'), rtRw: get('rtRw'), kel_desa: get('kel_desa'), kecamatan: get('kecamatan'),
+          agama: get('agama'), status: get('status'), pekerjaan: get('pekerjaan'),
+          kewarganegaraan: get('kewarganegaraan'), masa_berlaku: get('masa_berlaku'), terbuat: get('terbuat')
+        };
+      }
+
+      function drawTextLeft(x, y, text, font, size) {
+        ctx.font = `${size}px ${font}`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#000000';
+        ctx.fillText(text, x, y);
+      }
+      function drawTextCenter(x, y, text, font, size) {
+        ctx.font = `${size}px ${font}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#000000';
+        ctx.fillText(text, x, y);
+      }
+
+      async function generateKTP() {
+        const data = getFormData();
+        const file = selectedFile || pasPhotoInput.files[0];
+        
+        await loadFonts();
+        
+        let templateImg, pasPhotoImg;
+        
+        // Load template
+        try {
+          templateImg = await loadImageFromURL(templateSrc);
+        } catch {
+          templateImg = new Image();
+          templateImg.width = 720;
+          templateImg.height = 463;
+        }
+        
+        // Load foto: pakai file user ATAU default
+        if (file) {
+          pasPhotoImg = await loadImageFromFile(file);
+        } else {
+          try {
+            pasPhotoImg = await loadImageFromURL(DEFAULT_PHOTO_URL);
+          } catch {
+            // Fallback: gambar kosong
+            pasPhotoImg = new Image();
+            pasPhotoImg.width = 200;
+            pasPhotoImg.height = 280;
+          }
+        }
+
+        canvas.width = 720;
+        canvas.height = 463;
+        ctx.clearRect(0,0,720,463);
+        ctx.drawImage(templateImg, 0, 0, 720, 463);
+
+        // FOTO
+        const PHOTO_X = 520, PHOTO_Y = 80, PHOTO_W = 200, PHOTO_H = 280;
+        const frameAspect = PHOTO_W/PHOTO_H;
+        const imgAspect = pasPhotoImg.width/pasPhotoImg.height;
+        let srcX, srcY, srcW, srcH;
+        if (imgAspect > frameAspect) {
+          srcH = pasPhotoImg.height;
+          srcW = srcH * frameAspect;
+          srcX = (pasPhotoImg.width - srcW)/2;
+          srcY = 0;
+        } else {
+          srcW = pasPhotoImg.width;
+          srcH = srcW / frameAspect;
+          srcX = 0;
+          srcY = (pasPhotoImg.height - srcH)/2;
+        }
+        const baseScale = Math.min(PHOTO_W/srcW, PHOTO_H/srcH);
+        const scale = baseScale * 0.78;
+        const drawW = srcW * scale, drawH = srcH * scale;
+        const drawX = PHOTO_X + (PHOTO_W - drawW)/2 - 15;
+        const drawY = PHOTO_Y + (PHOTO_H - drawH)/2;
+        ctx.drawImage(pasPhotoImg, srcX, srcY, srcW, srcH, drawX, drawY, drawW, drawH);
+
+        // teks
+        drawTextCenter(380, 45, `PROVINSI ${data.provinsi.toUpperCase()}`, 'ArrialKTP', 25);
+        drawTextCenter(380, 70, `KOTA ${data.kota.toUpperCase()}`, 'ArrialKTP', 25);
+
+        ctx.font = '32px OcrKTP';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#000000';
+        ctx.fillText(data.nik, 170, 105);
+
+        const upper = s => s.toUpperCase();
+        drawTextLeft(190, 145, upper(data.nama), 'ArrialKTP', 16);
+        drawTextLeft(190, 168, upper(data.ttl), 'ArrialKTP', 16);
+        drawTextLeft(190, 191, upper(data.jenis_kelamin), 'ArrialKTP', 16);
+        drawTextLeft(463, 190, upper(data.golongan_darah), 'ArrialKTP', 16);
+        drawTextLeft(190, 212, upper(data.alamat), 'ArrialKTP', 16);
+        drawTextLeft(190, 234, upper(data.rtRw), 'ArrialKTP', 16);
+        drawTextLeft(190, 257, upper(data.kel_desa), 'ArrialKTP', 16);
+        drawTextLeft(190, 279, upper(data.kecamatan), 'ArrialKTP', 16);
+        drawTextLeft(190, 300, upper(data.agama), 'ArrialKTP', 16);
+        drawTextLeft(190, 323, upper(data.status), 'ArrialKTP', 16);
+        drawTextLeft(190, 346, upper(data.pekerjaan), 'ArrialKTP', 16);
+        drawTextLeft(190, 369, upper(data.kewarganegaraan), 'ArrialKTP', 16);
+        drawTextLeft(190, 390, upper(data.masa_berlaku), 'ArrialKTP', 16);
+        drawTextLeft(529, 345, `KOTA ${data.kota.toUpperCase()}`, 'ArrialKTP', 18);
+        drawTextLeft(555, 365, data.terbuat, 'ArrialKTP', 18);
+
+        const sign = data.nama.split(' ')[0] || data.nama;
+        ctx.font = '40px SignKTP';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(sign, 540, 395);
+
+        if (downloadLink) downloadLink.classList.add('show');
+
+        let publicUrl = null;
+        try {
+          const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+          publicUrl = URL.createObjectURL(blob);
+        } catch (e) { publicUrl = canvas.toDataURL('image/png'); }
+
+        if (resultLink) {
+          resultLink.href = publicUrl;
+          resultLink.textContent = '🔗 Result link (publik / lokal)';
+          resultLink.style.display = 'inline-block';
+        }
+      }
+
+      // ===== FORM SUBMIT =====
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Tampilkan loading bar
+        loadingBar.classList.add('show');
+        loadingText.classList.add('show');
+        
+        try {
+          await Promise.all([
+            generateKTP(),
+            new Promise(resolve => setTimeout(resolve, 200))
+          ]);
+        } catch (err) { 
+          alert('Error: '+err); 
+        } finally {
+          loadingBar.classList.remove('show');
+          loadingText.classList.remove('show');
+          
+          // Reset animasi bar
+          loadingBar.style.animation = 'none';
+          setTimeout(() => { loadingBar.style.animation = ''; }, 10);
+        }
+      });
+
+      // ===== CLEAR =====
+      clearBtn.addEventListener('click', () => {
+        form.reset();
+        selectedFile = null;
+        pasPhotoInput.value = '';
+        previewImg.src = '';
+        uploadFilename.textContent = '';
+        uploadSelected.style.display = 'none';
+        uploadSelected.classList.remove('show');
+        uploadPlaceholder.style.display = 'flex';
+        uploadBox.classList.remove('has-file');
+        
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        if(downloadLink) downloadLink.classList.remove('show');
+        if(resultLink) { 
+          resultLink.style.display='none'; 
+          resultLink.removeAttribute('href'); 
+        }
+      });
+
+      // ===== DOWNLOAD =====
+      downloadLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        canvas.toBlob(blob => {
+          if(!blob) return alert('Generate dulu');
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'fake-ektp.png';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        }, 'image/png');
+      });
+    })();
+  </script>
+</body>
+</html>
